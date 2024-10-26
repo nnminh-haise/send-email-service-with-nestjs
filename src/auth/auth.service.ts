@@ -61,6 +61,7 @@ export class AuthService {
     const payload: JwtClaims = {
       email: user.email,
       id: user.id,
+      roles: user.roles,
     };
     return await this.generateToken(payload);
   }

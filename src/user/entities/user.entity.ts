@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Gender } from './gender.enum';
+import { Role } from 'src/auth/entities/role.enum';
 
 @Schema({ timestamps: true })
 export class User {
@@ -16,6 +17,9 @@ export class User {
 
   @Prop({ required: true })
   password: string;
+
+  @Prop({ type: [String], enum: Role, default: [Role.USER] })
+  roles: Role[];
 
   @Prop({ required: true, default: Gender.MALE })
   gender: Gender;

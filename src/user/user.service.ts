@@ -13,6 +13,7 @@ import { User } from './entities/user.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import * as dotenv from 'dotenv';
 import * as bcrypt from 'bcrypt';
+import { Role } from 'src/auth/entities/role.enum';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ export class UserService {
       const user = new this.userModel({
         ...createUserDto,
         password: hashedPassword,
+        roles: [Role.USER],
       });
       const savedUser = await user.save();
       return savedUser.toJSON() as User;
