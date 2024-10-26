@@ -1,34 +1,49 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import * as dotenv from 'dotenv';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  HttpCode,
+  Patch,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { RequestedUser } from 'src/decorator/request-user.decorator';
+import { AuthorizedResponse } from './dto/authorized-response.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { LocalGuard } from './guard/local.guard';
+import { JwtGuard } from './guard/jwt.guard';
 
-@Controller('auth')
+dotenv.config();
+
+const resourcePath: string = `${process.env.API_PREFIX}/${process.env.API_VERSION}/auth`;
+
+@Controller(resourcePath)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post()
-  create(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.create(createAuthDto);
+  @Post('login')
+  @HttpCode(200)
+  @UseGuards(LocalGuard)
+  async authenticate(@RequestedUser() user: any): Promise<AuthorizedResponse> {
+    return await this.authService.authenticate(user);
   }
 
-  @Get()
-  findAll() {
-    return this.authService.findAll();
+  @Post('sign-up')
+  @HttpCode(201)
+  async registrate(
+    @Body() createUserDto: CreateUserDto,
+  ): Promise<AuthorizedResponse> {
+    return await this.authService.registrate(createUserDto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
+  @Patch('change-password')
+  @UseGuards(JwtGuard)
+  async changePassword(
+    @RequestedUser() user: any,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return await this.authService.changePassword(user.id, changePasswordDto);
   }
 }
