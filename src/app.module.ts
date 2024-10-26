@@ -5,6 +5,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DatabaseService } from './database/database.service';
+import { ReceiverModule } from './receiver/receiver.module';
 import mongoose from 'mongoose';
 
 dotenv.config();
@@ -17,6 +18,7 @@ const databaseConnectionString: string = `${process.env.DATABASE_TYPE}://${proce
     EmailModule,
     UserModule,
     AuthModule,
+    ReceiverModule,
   ],
   controllers: [],
   providers: [DatabaseService],

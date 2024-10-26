@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Gender } from './gender.enum';
 import { Role } from 'src/auth/entities/role.enum';
+import { OmitType } from '@nestjs/mapped-types';
 
 @Schema({ timestamps: true })
 export class User {
@@ -34,17 +35,8 @@ export class User {
   address: string;
 }
 
-export type UserDocument = User & Document;
+export type UserDetailDocument = User & Document;
 
 const UserSchema = SchemaFactory.createForClass(User);
-
-UserSchema.set('toJSON', {
-  transform: (doc: any, ret: Record<string, any>) => {
-    ret.id = ret._id;
-    delete ret._id;
-    delete ret.__v;
-    return ret;
-  },
-});
 
 export { UserSchema };

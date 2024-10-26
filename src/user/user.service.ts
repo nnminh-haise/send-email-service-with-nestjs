@@ -14,6 +14,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import * as dotenv from 'dotenv';
 import * as bcrypt from 'bcrypt';
 import { Role } from 'src/auth/entities/role.enum';
+import { transformMongooseDocument } from 'src/mongoose/mongoose.service';
 
 dotenv.config();
 
@@ -25,7 +26,7 @@ export class UserService {
 
   constructor(
     @InjectModel(User.name)
-    private readonly userModel: Model<User>,
+    private readonly UserModel: Model<User>,
   ) {}
 
   private async hashPassword(password: string): Promise<string> {
@@ -34,14 +35,18 @@ export class UserService {
 
   async create(createUserDto: CreateUserDto) {
     try {
-      const hashedPassword = await this.hashPassword(createUserDto.password);
-      const user = new this.userModel({
+      const hashedPassword: string = await this.hashPassword(
+        createUserDto.password,
+      );
+      const userDetailDocument = new this.UserModel({
         ...createUserDto,
         password: hashedPassword,
         roles: [Role.USER],
       });
-      const savedUser = await user.save();
-      return savedUser.toJSON() as User;
+      const savedUser = await userDetailDocument.save();
+      const response = savedUser.toJSON() as User;
+      delete response.password;
+      return response;
     } catch (error: any) {
       if (error.code === 11000) {
         throw new BadRequestException('Email already exists');
@@ -53,40 +58,36 @@ export class UserService {
   }
 
   async findOne(id: string) {
-    const userDocument = await this.userModel
-      .findById(id)
-      .select({
-        password: 0,
-      })
+    const userDocument = await this.UserModel.findById(id)
+      .select({ password: 0 })
+      .transform(transformMongooseDocument)
       .exec();
-    return userDocument?.toJSON();
+    return userDocument as User;
   }
 
   async findUserDetailByEmail(email: string) {
-    const userDocument = await this.userModel.findOne({ email }).exec();
-    return userDocument?.toJSON();
+    const userDetailDocument = await this.UserModel.findOne({ email })
+      .transform(transformMongooseDocument)
+      .exec();
+    return userDetailDocument as User;
   }
 
   async findUserDetailById(id: string) {
-    const userDocument = await this.userModel.findById(id).exec();
-    return userDocument?.toJSON();
+    const userDocument = await this.UserModel.findById(id)
+      .transform(transformMongooseDocument)
+      .exec();
+    return userDocument as User;
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
     try {
-      const updatedUser = await this.userModel
-        .findByIdAndUpdate(
-          id,
-          {
-            ...updateUserDto,
-          },
-          { new: true },
-        )
-        .exec();
+      const updatedUser = await this.UserModel.findByIdAndUpdate(
+        id,
+        { ...updateUserDto },
+        { new: true },
+      ).exec();
       if (!updatedUser) throw new NotFoundException('User not found');
-      const response = updatedUser.toJSON() as User;
-      delete response.password;
-      return response;
+      return await this.findOne(id);
     } catch (error: any) {
       this.logger.fatal(error);
       throw new InternalServerErrorException('Faield to update user', error);
@@ -96,13 +97,13 @@ export class UserService {
   async updatePassword(id: string, newPassword: string) {
     try {
       const hashedPassword = await this.hashPassword(newPassword);
-      const updatedUser = await this.userModel
-        .findByIdAndUpdate(id, { password: hashedPassword }, { new: true })
-        .exec();
+      const updatedUser = await this.UserModel.findByIdAndUpdate(
+        id,
+        { password: hashedPassword },
+        { new: true },
+      ).exec();
       if (!updatedUser) throw new NotFoundException('User not found');
-      const response = updatedUser.toJSON() as User;
-      delete response.password;
-      return response;
+      return await this.findOne(id);
     } catch (error: any) {
       this.logger.fatal(error);
       throw new InternalServerErrorException(
