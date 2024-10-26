@@ -6,13 +6,13 @@ import {
 import { AuthenticationDto } from './dto/authentication.dto';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { UserService } from 'src/user/user.service';
-import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { JwtClaims } from './dto/jwt-claim.dto';
 import { AuthorizedResponse } from './dto/authorized-response.dto';
 import * as dotenv from 'dotenv';
 import { User } from 'src/user/entities/user.entity';
 import { ChangePasswordDto } from './dto/change-password.dto';
+const bcrypt = require('bcryptjs');
 
 dotenv.config();
 

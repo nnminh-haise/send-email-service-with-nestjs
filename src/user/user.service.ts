@@ -12,9 +12,9 @@ import { Model } from 'mongoose';
 import { User } from './entities/user.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import * as dotenv from 'dotenv';
-import * as bcrypt from 'bcrypt';
 import { Role } from 'src/auth/entities/role.enum';
 import { transformMongooseDocument } from 'src/mongoose/mongoose.service';
+const bcrypt = require('bcryptjs');
 
 dotenv.config();
 
