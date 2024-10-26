@@ -10,11 +10,9 @@ import mongoose from 'mongoose';
 
 dotenv.config();
 
-const databaseConnectionString: string = `${process.env.DATABASE_TYPE}://${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/${process.env.DATABASE_NAME}`;
-
 @Module({
   imports: [
-    MongooseModule.forRoot(databaseConnectionString),
+    MongooseModule.forRoot(process.env.DATABASE_CONNECTION_STRING),
     EmailModule,
     UserModule,
     AuthModule,

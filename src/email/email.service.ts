@@ -16,6 +16,8 @@ import { Receiver } from 'src/receiver/entities/receiver.entity';
 import { transformMongooseDocument } from 'src/mongoose/mongoose.service';
 import { send } from 'process';
 import { error } from 'console';
+import { SendEmailDto } from './dto/send-email.dto';
+import { SendNotificationEmailDto } from './dto/send-notification-email.dto';
 
 @Injectable()
 export class EmailService {
@@ -28,15 +30,22 @@ export class EmailService {
     private readonly userService: UserService,
   ) {}
 
-  async sendPublicEmail(user: User) {
-    await this.mailerService.sendMail({
-      to: user.email,
-      // from: '"Support Team" <support@example.com>', // override default from
-      subject: 'Welcome to Nice App! Confirm your Email',
-      template: './confirmation',
+  private async sendEmail(payload: SendEmailDto) {
+    try {
+      await this.mailerService.sendMail(payload);
+    } catch (error: any) {
+      this.logger.fatal(error.message);
+      throw new InternalServerErrorException('Failed to send email', error);
+    }
+  }
+
+  async sendPublicEmail(sendNotificationEmailDto: SendNotificationEmailDto) {
+    await this.sendEmail({
+      to: sendNotificationEmailDto.to,
+      subject: sendNotificationEmailDto.subject,
+      template: './notification',
       context: {
-        name: 'test-name',
-        ...user,
+        content: sendNotificationEmailDto.content,
       },
     });
   }
@@ -80,7 +89,7 @@ export class EmailService {
     return emailDocument as PopulatedEmail;
   }
 
-  async sendEmail(email: PopulatedEmail) {
+  async sendGeneralEmail(email: PopulatedEmail) {
     if (!email) {
       throw new NotFoundException('Email not found');
     }
@@ -114,7 +123,7 @@ export class EmailService {
     }
 
     try {
-      const sentEmailResponse = await this.sendEmail(email);
+      const sentEmailResponse = await this.sendGeneralEmail(email);
       if (!sentEmailResponse) {
         throw new InternalServerErrorException('Failed to send email');
       }
