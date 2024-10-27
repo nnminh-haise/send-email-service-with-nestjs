@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { User } from 'src/user/entities/user.entity';
+import { ReceiverType } from './receiver-type.enum';
 
 @Schema({ timestamps: true })
 export class Receiver {
@@ -14,6 +15,9 @@ export class Receiver {
   @Prop({ required: true })
   email: string;
 
+  @Prop({ default: ReceiverType.ANONYMOUS })
+  receiverType: ReceiverType;
+
   @Prop({
     ref: User.name,
     type: String,
@@ -24,7 +28,7 @@ export class Receiver {
 
 export type ReceiverDocument = Receiver & Document;
 
-export type PopulatedReceiver = Receiver | { creator: User };
+export type PopulatedReceiver = Receiver & { creator: User };
 
 const ReceiverSchema = SchemaFactory.createForClass(Receiver);
 

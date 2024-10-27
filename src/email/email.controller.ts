@@ -18,7 +18,7 @@ export class EmailController {
     @Query('subject') subject: string,
     @Query('content') content: string,
   ) {
-    await this.emailService.sendPublicEmail({ to, subject, content });
+    return await this.emailService.sendPublicEmail({ to, subject, content });
   }
 
   @Get('send')

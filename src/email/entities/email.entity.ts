@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import e from 'express';
 import { Receiver } from 'src/receiver/entities/receiver.entity';
 import { User } from 'src/user/entities/user.entity';
+import { EmailType } from './email-type.enum';
 
 @Schema({ timestamps: true })
 export class Email {
@@ -24,6 +25,9 @@ export class Email {
 
   @Prop({ ref: User.name, type: String, required: true })
   sender: string;
+
+  @Prop({ default: EmailType.GENERAL })
+  type: EmailType;
 }
 
 export type EmailDocument = Email & Document;

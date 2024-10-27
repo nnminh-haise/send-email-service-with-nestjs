@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Gender } from './gender.enum';
 import { Role } from 'src/auth/entities/role.enum';
 import { OmitType } from '@nestjs/mapped-types';
+import { UserType } from './user-type.enum';
 
 @Schema({ timestamps: true })
 export class User {
@@ -22,11 +23,14 @@ export class User {
   @Prop({ type: [String], enum: Role, default: [Role.USER] })
   roles: Role[];
 
-  @Prop({ required: true, default: Gender.MALE })
+  @Prop({ default: Gender.MALE })
   gender: Gender;
 
   @Prop({ required: true })
   phone: string;
+
+  @Prop({ default: UserType.ANONYMOUS })
+  userType: UserType;
 
   @Prop({ default: null })
   dateOfBirth: Date;

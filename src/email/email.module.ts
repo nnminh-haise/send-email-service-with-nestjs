@@ -10,6 +10,7 @@ import { Email, EmailSchema } from './entities/email.entity';
 import { UserModule } from 'src/user/user.module';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { ReceiverModule } from 'src/receiver/receiver.module';
 
 dotenv.config();
 
@@ -40,14 +41,9 @@ dotenv.config();
       },
     }),
     UserModule,
+    ReceiverModule,
   ],
   controllers: [EmailController],
-  providers: [
-    EmailService,
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: ThrottlerGuard,
-    // },
-  ],
+  providers: [EmailService],
 })
 export class EmailModule {}

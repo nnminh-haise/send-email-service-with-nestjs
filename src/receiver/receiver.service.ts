@@ -13,6 +13,7 @@ import { User } from 'src/user/entities/user.entity';
 import { PopulatedReceiver, Receiver } from './entities/receiver.entity';
 import { transformMongooseDocument } from 'src/mongoose/mongoose.service';
 import { map } from 'rxjs';
+import { ReceiverType } from './entities/receiver-type.enum';
 
 @Injectable()
 export class ReceiverService {
@@ -31,7 +32,44 @@ export class ReceiverService {
     try {
       const receiverModel = new this.receiverModel({
         ...createReceiverDto,
+        receiverType: ReceiverType.REGISTERED,
         creator: creator.id,
+      });
+      const receiverDocument = await receiverModel.save();
+      return await this.findOne(receiverDocument._id.toString());
+    } catch (error: any) {
+      if (error.code === 11000) {
+        throw new BadRequestException('Receiver already exists');
+      }
+
+      this.logger.fatal(error);
+      throw new InternalServerErrorException(
+        'Failed to create receiver',
+        error,
+      );
+    }
+  }
+
+  async createAnonymousReceiver(receiverEmail: string) {
+    try {
+      const existingReceiver: PopulatedReceiver =
+        await this.findByEmail(receiverEmail);
+      if (existingReceiver) return existingReceiver;
+
+      const anonymousSender: User =
+        await this.userService.createAnonymousUser();
+      if (!anonymousSender) {
+        this.logger.fatal('Cannot create anonymous user');
+        throw new InternalServerErrorException('Cannot create anonymous user');
+      }
+
+      const timestamp: number = new Date().getTime();
+      const receiverModel = new this.receiverModel({
+        firstName: 'Anonymous',
+        lastName: `User ${timestamp}`,
+        email: receiverEmail,
+        receiverType: ReceiverType.ANONYMOUS,
+        creator: anonymousSender.id,
       });
       const receiverDocument = await receiverModel.save();
       return await this.findOne(receiverDocument._id.toString());
@@ -51,6 +89,20 @@ export class ReceiverService {
   async findOne(id: string) {
     const receiverDocument = await this.receiverModel
       .findOne({ _id: id })
+      .select({ __v: 0 })
+      .populate({
+        path: 'creator',
+        select: '-password -__v',
+        transform: transformMongooseDocument,
+      })
+      .transform(transformMongooseDocument)
+      .exec();
+    return receiverDocument as PopulatedReceiver;
+  }
+
+  async findByEmail(email: string) {
+    const receiverDocument = await this.receiverModel
+      .findOne({ email })
       .select({ __v: 0 })
       .populate({
         path: 'creator',

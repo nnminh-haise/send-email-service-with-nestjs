@@ -16,7 +16,11 @@ import { APP_GUARD } from '@nestjs/core';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    MongooseModule.forRoot(process.env.DATABASE_CONNECTION_STRING),
+    MongooseModule.forRoot(
+      process.env.MODE === 'prod'
+        ? process.env.DATABASE_CONNECTION_STRING_PROD
+        : process.env.DATABASE_CONNECTION_STRING_DEV,
+    ),
     ThrottlerModule.forRoot([
       {
         ttl: +process.env.APP_RATE_LIMIT_TTL * 1000 || 1000,

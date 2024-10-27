@@ -18,6 +18,8 @@ import { send } from 'process';
 import { error } from 'console';
 import { SendEmailDto } from './dto/send-email.dto';
 import { SendNotificationEmailDto } from './dto/send-notification-email.dto';
+import { ReceiverService } from 'src/receiver/receiver.service';
+import { EmailType } from './entities/email-type.enum';
 
 @Injectable()
 export class EmailService {
@@ -28,11 +30,16 @@ export class EmailService {
     private readonly emailModel: Model<Email>,
     private readonly mailerService: MailerService,
     private readonly userService: UserService,
+    private readonly receiverService: ReceiverService,
   ) {}
 
   private async sendEmail(payload: SendEmailDto) {
     try {
       await this.mailerService.sendMail(payload);
+      return {
+        to: payload.to,
+        subject: payload.subject,
+      };
     } catch (error: any) {
       this.logger.fatal(error.message);
       throw new InternalServerErrorException('Failed to send email', error);
@@ -40,14 +47,43 @@ export class EmailService {
   }
 
   async sendPublicEmail(sendNotificationEmailDto: SendNotificationEmailDto) {
-    await this.sendEmail({
-      to: sendNotificationEmailDto.to,
-      subject: sendNotificationEmailDto.subject,
-      template: './notification',
-      context: {
-        content: sendNotificationEmailDto.content,
-      },
-    });
+    try {
+      const receiver = await this.receiverService.createAnonymousReceiver(
+        sendNotificationEmailDto.to,
+      );
+      if (!receiver) {
+        throw new InternalServerErrorException(
+          'Cannot create anonymous receiver',
+        );
+      }
+      const creator: User = receiver.creator as User;
+
+      const email = await this.createEmail(creator.id, {
+        subject: sendNotificationEmailDto.subject,
+        body: sendNotificationEmailDto.content,
+        recevierId: receiver.id,
+        type: EmailType.NOTIFICATION,
+      });
+      if (!email) {
+        throw new InternalServerErrorException('Failed to create email');
+      }
+
+      this.logger.log(`Sending email to ${sendNotificationEmailDto.to}`);
+      this.logger.log(
+        `Subject: ${sendNotificationEmailDto.subject} | Content: ${sendNotificationEmailDto.content}`,
+      );
+      return await this.sendEmail({
+        to: sendNotificationEmailDto.to,
+        subject: sendNotificationEmailDto.subject,
+        template: './notification',
+        context: {
+          content: sendNotificationEmailDto.content,
+        },
+      });
+    } catch (error: any) {
+      this.logger.fatal(error.message);
+      throw new InternalServerErrorException('Failed to send email', error);
+    }
   }
 
   async createEmail(senderId: string, createEmailDto: CreateEmailDto) {
@@ -61,6 +97,7 @@ export class EmailService {
         ...createEmailDto,
         sender: sender.id,
         receiver: createEmailDto.recevierId,
+        type: createEmailDto?.type || EmailType.GENERAL,
       });
       const createdEmail = await emailDocument.save();
       return await this.findOne(createdEmail._id.toString());

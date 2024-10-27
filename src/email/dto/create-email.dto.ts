@@ -1,5 +1,12 @@
-import { IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsMongoId,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { Receiver } from 'src/receiver/entities/receiver.entity';
+import { EmailType } from '../entities/email-type.enum';
 
 export class CreateEmailDto {
   @IsNotEmpty({ message: 'Receiver is required' })
@@ -21,4 +28,7 @@ export class CreateEmailDto {
   @IsOptional()
   @IsString({ message: 'Footer must be a string' })
   footer?: string;
+
+  @IsEnum(EmailType)
+  type?: EmailType;
 }

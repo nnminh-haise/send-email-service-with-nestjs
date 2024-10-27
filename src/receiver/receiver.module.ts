@@ -4,6 +4,7 @@ import { ReceiverController } from './receiver.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Receiver, ReceiverSchema } from './entities/receiver.entity';
 import { UserModule } from 'src/user/user.module';
+import e from 'express';
 
 @Module({
   imports: [
@@ -18,5 +19,6 @@ import { UserModule } from 'src/user/user.module';
   ],
   controllers: [ReceiverController],
   providers: [ReceiverService],
+  exports: [ReceiverService],
 })
 export class ReceiverModule {}
