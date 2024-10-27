@@ -1,12 +1,9 @@
 import { Body, Controller, Get, Query, UseGuards } from '@nestjs/common';
-import * as dotenv from 'dotenv';
 import { JwtGuard } from 'src/auth/guard/jwt.guard';
 import { EmailService } from './email.service';
 import { RequestedUser } from 'src/decorator/request-user.decorator';
 import { CreateEmailDto } from './dto/create-email.dto';
-import { RateLimit } from 'nestjs-rate-limiter';
-
-dotenv.config();
+import { Throttle } from '@nestjs/throttler';
 
 const resourcePath: string = `${process.env.API_PREFIX}/${process.env.API_VERSION}/emails`;
 
@@ -15,7 +12,7 @@ export class EmailController {
   constructor(private readonly emailService: EmailService) {}
 
   @Get('notify')
-  @RateLimit({ points: 5, duration: 1 })
+  @Throttle({ default: { limit: 2, ttl: 60 } })
   async sendNotificationEmail(
     @Query('to') to: string,
     @Query('subject') subject: string,

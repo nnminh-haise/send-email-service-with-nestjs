@@ -8,6 +8,8 @@ import * as dotenv from 'dotenv';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Email, EmailSchema } from './entities/email.entity';
 import { UserModule } from 'src/user/user.module';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 dotenv.config();
 
@@ -40,6 +42,12 @@ dotenv.config();
     UserModule,
   ],
   controllers: [EmailController],
-  providers: [EmailService],
+  providers: [
+    EmailService,
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: ThrottlerGuard,
+    // },
+  ],
 })
 export class EmailModule {}

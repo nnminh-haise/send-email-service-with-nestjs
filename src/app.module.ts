@@ -1,4 +1,3 @@
-import * as dotenv from 'dotenv';
 import { Module } from '@nestjs/common';
 import { EmailModule } from './email/email.module';
 import { UserModule } from './user/user.module';
@@ -7,24 +6,36 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { DatabaseService } from './database/database.service';
 import { ReceiverModule } from './receiver/receiver.module';
 import mongoose from 'mongoose';
-import { RateLimiterModule } from 'nestjs-rate-limiter';
-
-dotenv.config();
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
-    MongooseModule.forRoot(process.env.DATABASE_CONNECTION_STRING),
-    RateLimiterModule.register({
-      points: 10,
-      duration: 1,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
     }),
+    MongooseModule.forRoot(process.env.DATABASE_CONNECTION_STRING),
+    ThrottlerModule.forRoot([
+      {
+        ttl: +process.env.APP_RATE_LIMIT_TTL * 1000 || 1000,
+        limit: +process.env.APP_RATE_LIMIT_MAX || 2,
+      },
+    ]),
     EmailModule,
     UserModule,
     AuthModule,
     ReceiverModule,
   ],
   controllers: [],
-  providers: [DatabaseService],
+  providers: [
+    DatabaseService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {
   constructor() {
