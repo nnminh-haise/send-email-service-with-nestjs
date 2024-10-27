@@ -1,8 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as dotenv from 'dotenv';
 import { ApiResponseTransformInterceptor } from './interceptor/api-response-transform.interceptor';
+import * as dotenv from 'dotenv';
+
 dotenv.config();
 
 const applicationPort: string = process.env.APP_PORT;
