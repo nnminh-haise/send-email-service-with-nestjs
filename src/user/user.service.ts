@@ -1,5 +1,4 @@
 import {
-  BadGatewayException,
   BadRequestException,
   Injectable,
   InternalServerErrorException,
@@ -130,7 +129,7 @@ export class UserService {
       return await this.findOne(id);
     } catch (error: any) {
       this.logger.fatal(error);
-      throw new InternalServerErrorException('Faield to update user', error);
+      throw new InternalServerErrorException('Failed to update user', error);
     }
   }
 

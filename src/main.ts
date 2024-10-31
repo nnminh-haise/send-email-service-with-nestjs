@@ -3,7 +3,6 @@ import { AppModule } from './app.module';
 import { INestApplication, Logger, ValidationPipe } from '@nestjs/common';
 import { ApiResponseTransformInterceptor } from './interceptor/api-response-transform.interceptor';
 import * as dotenv from 'dotenv';
-import { ThrottlerGuard } from '@nestjs/throttler';
 
 dotenv.config();
 
